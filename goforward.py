@@ -67,7 +67,7 @@ class GoForward():
  
 if __name__ == '__main__':
     try:
-        GoForward()
     except:
         rospy.loginfo("GoForward node terminated.")
-
+	
+# hello from chj
