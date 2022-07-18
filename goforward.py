@@ -22,41 +22,89 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 # python goforward.py
 
 import rospy
+import time
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
 
+  
 class GoForward():
+
+        
     def __init__(self):
         # initiliaze
         rospy.init_node('GoForward', anonymous=False)
+        #position
+       # odm_pub = rospy.Publisher('nav_msgs/Odometry', Odometry)
 
 	# tell user how to stop TurtleBot
-	rospy.loginfo("To stop TurtleBot CTRL + C")
+        rospy.loginfo("To stop TurtleBot CTRL + C")
 
         # What function to call when you ctrl + c    
         rospy.on_shutdown(self.shutdown)
         
 	# Create a publisher which can "talk" to TurtleBot and tell it to move
         # Tip: You may need to change cmd_vel_mux/input/navi to /cmd_vel if you're not using TurtleBot2
-        self.cmd_vel = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
-     
+        self.cmd_vel = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
+        self.odom_sub=rospy.Subscriber('/odom', Odometry, self.callback)
 	#TurtleBot will stop if we don't keep telling it to move.  How often should we tell it to move? 10 HZ
-        r = rospy.Rate(10);
+        r = rospy.Rate(100);
 
         # Twist is a datatype for velocity
         move_cmd = Twist()
 	# let's go forward at 0.2 m/s
-        move_cmd.linear.x = 0.2
+        move_cmd.linear.x = 0
 	# let's turn at 0 radians/s
-	move_cmd.angular.z = 0
+        move_cmd.angular.z = 0
 
+        
+        #odom_sub=rospy.Subscriber('nav_msgs/Odometry', Odometry, self.callback)
+        
+        #control list
+        x1 = -0.26
+        z1 = -2.8
+        
+        x2 = -0.26
+        z2 = -2.8
+        
+        #msg = Odometry()
+        counter = 0
+        interv = 100
+        wait = 150
+        listcount = 0
+        
+        move_cmd.linear.x = x1
+        move_cmd.angular.z = z1
 	# as long as you haven't ctrl + c keeping doing...
         while not rospy.is_shutdown():
-	    # publish the velocity
-            self.cmd_vel.publish(move_cmd)
-	    # wait for 0.1 seconds (10 HZ) and publish again
+            
+            if counter < interv:
+	      #publish the velocity
+              self.cmd_vel.publish(move_cmd)
+              #rospy.loginfo("Forward")   
+            #elif counter>= interv and counter<wait:
+            else:
+              move_cmd.linear.x = 0.00
+              move_cmd.angular.z = 0
+              self.cmd_vel.publish(move_cmd) 
+              #listcount += 1
+              #rospy.loginfo("Stop")f
+              #rospy.loginfo("x: %.2f, y: %.2f" % (msg.x, msg.y))
+            #else:
+            #  move_cmd.linear.x = x2
+            #  move_cmd.angular.z = z2
+            #  counter = -1
+              
+            counter += 1
             r.sleep()
-                        
-        
+	  
+	           
+    def callback(self,msg):
+        #rospy.loginfo("x: %.2f, y: %.2f" % (msg.x, msg.y))
+        #rospy.loginfo('Orientation in euler - theta:{}'.format(msg.theta))
+        print(msg.pose.pose)
+        #rospy.sleep(2)
+      
+                
     def shutdown(self):
         # stop turtlebot
         rospy.loginfo("Stop TurtleBot")
@@ -66,8 +114,9 @@ class GoForward():
         rospy.sleep(1)
  
 if __name__ == '__main__':
-    try:
-        GoForward()
-    except:
-        rospy.loginfo("GoForward node terminated.")
-
+    #try:
+    	GoForward()
+    	
+    #except:
+    	#rospy.loginfo("GoForward node terminated.")
+	
